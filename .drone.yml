@@ -1,0 +1,37 @@
+#If you update this file don't forget to sign it via DRONE-CLI:
+#drone sign <orgname>/<cookbookname>
+#
+
+pipeline:
+  test:
+    image: jmccann/drone-chefdk:1.2.22
+    when:
+      event: pull_request
+    commands:
+      - echo "Testing"
+      - rubocop --only Syntax
+
+  upload:
+    image: jmccann/drone-chef-supermarket:1
+    pull: true
+    when:
+      event: push
+      branch: master
+    user: ${CHEF_USERNAME}
+    private_key: ${CHEF_PRIV_KEY}
+    server: https://devops1
+    ssl_verify: false
+
+  deploy:
+    image: jmccann/drone-chef:2
+    pull: true
+    when:
+      event: push
+      branch: master
+    user: ${CHEF_USERNAME}
+    private_key: ${CHEF_PRIV_KEY}
+    server: https://devops1
+    org: test1
+    berks_files:
+      - Berksfile
+    ssl_verify: false
